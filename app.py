@@ -109,4 +109,32 @@ fig = px.histogram(x_h,
                    y=col_chosen, 
                    histfunc='avg',
                    category_orders={'clusters_ward': [0, 1, 2]},
-                   color='clusters_ward',
+                   color='clusters_ward',  
+                   color_discrete_sequence=px.colors.qualitative.Bold)
+
+# Display the data table
+st.write("Data Table")
+st.dataframe(country_filtered.head(10), height=200, width=800)
+
+# Display the plot
+st.plotly_chart(fig, use_container_width=True)
+
+# ChatGPT Support Section
+st.subheader("Strategic Support - ChatGPT")
+
+# Create DataFrame Agent
+agent = create_pandas_dataframe_agent(
+    ChatOpenAI(temperature=0.7, model="gpt-4", openai_api_key=openai_api_key),
+    country_filtered,
+    verbose=True,
+    agent_type=AgentType.OPENAI_FUNCTIONS,
+    allow_dangerous_code=True,  # Considering security implications
+)
+
+# Get user question
+user_question = st.text_input("Enter your question here:")
+
+# Send the question to ChatGPT and display the response
+if user_question:
+    response = agent.run(user_question)
+    st.write("Response:", response)
