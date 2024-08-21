@@ -1,10 +1,11 @@
+import os
+import json
+from google.cloud import secretmanager
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import pickle
 import openai
-import os
-from google.cloud import secretmanager
 from langchain_openai import ChatOpenAI
 from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe_agent
 from langchain.agents.agent_types import AgentType
@@ -20,16 +21,26 @@ st.set_page_config(
 current_dir = os.getcwd()
 
 # Load Secret from GCP Secret Manager
-def get_secret(secret_name, project_id, version_id = '1'):
+def get_secret(secret_name, project_id, version_id='1'):
     client = secretmanager.SecretManagerServiceClient()
     secret_path = f"projects/{project_id}/secrets/{secret_name}/versions/{version_id}"
     response = client.access_secret_version(name=secret_path)
     return response.payload.data.decode('UTF-8')
-    
 
 # Set your GCP project ID and get OpenAI API key from Secret Manager
 project_id = "psychic-root-424207-s9"
 openai_api_key = get_secret("openai-api-key", project_id)
+
+# Load Service Account credentials from Secret Manager and set the environment variable
+service_account_info = get_secret("my-service-account-key", project_id)
+service_account_path = "/tmp/service-account-key.json"
+
+# Write the credentials to a file
+with open(service_account_path, 'w') as f:
+    f.write(service_account_info)
+
+# Set the environment variable
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = service_account_path
 
 # Construct the full paths using the current directory
 pickle_path = os.path.join(current_dir, "country_filtered_cluster_ward")
@@ -98,32 +109,4 @@ fig = px.histogram(x_h,
                    y=col_chosen, 
                    histfunc='avg',
                    category_orders={'clusters_ward': [0, 1, 2]},
-                   color='clusters_ward',  
-                   color_discrete_sequence=px.colors.qualitative.Bold)
-
-# Display the data table
-st.write("Data Table")
-st.dataframe(country_filtered.head(10), height=200, width=800)
-
-# Display the plot
-st.plotly_chart(fig, use_container_width=True)
-
-# ChatGPT Support Section
-st.subheader("Strategic Support - ChatGPT")
-
-# Create DataFrame Agent
-agent = create_pandas_dataframe_agent(
-    ChatOpenAI(temperature=0.7, model="gpt-4", openai_api_key=openai_api_key),
-    country_filtered,
-    verbose=True,
-    agent_type=AgentType.OPENAI_FUNCTIONS,
-    allow_dangerous_code=True,  # Considering security implications
-)
-
-# Get user question
-user_question = st.text_input("Enter your question here:")
-
-# Send the question to ChatGPT and display the response
-if user_question:
-    response = agent.run(user_question)
-    st.write("Response:", response)
+                   color='clusters_ward',
