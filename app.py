@@ -11,6 +11,8 @@ from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe
 from langchain.agents.agent_types import AgentType
 import scipy.cluster.hierarchy as sch
 import matplotlib.pyplot as plt
+import os
+import json
 
 # Page Configuration
 st.set_page_config(
@@ -29,6 +31,7 @@ def get_secret(secret_name, project_id, version_id='1'):
 
 # Set your GCP project ID and get OpenAI API key from Secret Manager
 project_id = "psychic-root-424207-s9"
+service_account_info = get_secret("my-service-account-key", project_id)
 openai_api_key = get_secret("openai-api-key", project_id)
 
 # Load Service Account credentials from Secret Manager and set the environment variable
