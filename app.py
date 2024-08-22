@@ -10,6 +10,7 @@ from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe
 from langchain.agents.agent_types import AgentType
 import scipy.cluster.hierarchy as sch
 import matplotlib.pyplot as plt
+import json
 
 # Page Configuration
 st.set_page_config(
