@@ -35,10 +35,17 @@ project_id = "psychic-root-424207-s9"
 service_account_info = json.loads(os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON'))
 
 # Authenticate using the service account info
-credentials = service_account.Credentials.from_service_account_info(service_account_info)
+##credentials = service_account.Credentials.from_service_account_info(service_account_info)
 
 # Use the credentials to access GCP services
 client = secretmanager.SecretManagerServiceClient(credentials=credentials)
+
+
+secret_payload = access_secret_version(project_id, secret_id)
+gcp_credentials = json.loads(secret_payload)
+
+credentials = service_account.Credentials.from_service_account_info(gcp_credentials)
+
 
 # Retrieve the OpenAI API key from Secret Manager
 openai_api_key = get_secret("openai-api-key", project_id)
