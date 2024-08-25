@@ -4,12 +4,14 @@ import plotly.express as px
 import pickle
 import openai
 import os
+import json
 from google.cloud import secretmanager
 from langchain_openai import ChatOpenAI
 from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe_agent
 from langchain.agents.agent_types import AgentType
 import scipy.cluster.hierarchy as sch
 import matplotlib.pyplot as plt
+from google.oauth2 import service_account
 
 # Page Configuration
 st.set_page_config(
@@ -21,23 +23,19 @@ current_dir = os.getcwd()
 
 # Load Secret from GCP Secret Manager
 def get_secret(secret_name, project_id, version_id='1'):
-    client = secretmanager.SecretManagerServiceClient()
+    client = secretmanager.SecretManagerServiceClient(credentials=credentials)
     secret_path = f"projects/{project_id}/secrets/{secret_name}/versions/{version_id}"
     response = client.access_secret_version(name=secret_path)
     return response.payload.data.decode('UTF-8')
 
-# Set your GCP project ID and get Service Account JSON from Secret Manager
+# Set your GCP project ID
 project_id = "psychic-root-424207-s9"
-service_account_json = get_secret("myfirstproject02_secretman", project_id)
 
-# Save the service account JSON to a temporary file
-service_account_path = os.path.join(current_dir, "service_account.json")
-with open(service_account_path, "w") as f:
-    f.write(service_account_json)
+# Load service account info from environment variable
+service_account_info = json.loads(os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON'))
 
-# Authenticate using the service account
-from google.oauth2 import service_account
-credentials = service_account.Credentials.from_service_account_file(service_account_path)
+# Authenticate using the service account info
+credentials = service_account.Credentials.from_service_account_info(service_account_info)
 
 # Use the credentials to access GCP services
 client = secretmanager.SecretManagerServiceClient(credentials=credentials)
