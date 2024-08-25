@@ -20,18 +20,32 @@ st.set_page_config(
 current_dir = os.getcwd()
 
 # Load Secret from GCP Secret Manager
-def get_secret(secret_name, project_id, version_id = '1'):
+def get_secret(secret_name, project_id, version_id='1'):
     client = secretmanager.SecretManagerServiceClient()
     secret_path = f"projects/{project_id}/secrets/{secret_name}/versions/{version_id}"
     response = client.access_secret_version(name=secret_path)
     return response.payload.data.decode('UTF-8')
-    
 
-# Set your GCP project ID and get OpenAI API key from Secret Manager
+# Set your GCP project ID and get Service Account JSON from Secret Manager
 project_id = "psychic-root-424207-s9"
+service_account_json = get_secret("myfirstproject02_secretman", project_id)
+
+# Save the service account JSON to a temporary file
+service_account_path = os.path.join(current_dir, "service_account.json")
+with open(service_account_path, "w") as f:
+    f.write(service_account_json)
+
+# Authenticate using the service account
+from google.oauth2 import service_account
+credentials = service_account.Credentials.from_service_account_file(service_account_path)
+
+# Use the credentials to access GCP services
+client = secretmanager.SecretManagerServiceClient(credentials=credentials)
+
+# Retrieve the OpenAI API key from Secret Manager
 openai_api_key = get_secret("openai-api-key", project_id)
 
-# Construct the full paths using the current directory
+# Continue with the rest of your Streamlit code
 pickle_path = os.path.join(current_dir, "country_filtered_cluster_ward")
 with open(pickle_path, 'rb') as file:
     country_filtered = pickle.load(file)
@@ -63,11 +77,6 @@ To evaluate the quality of these clusters, metrics such as the Davies-Bouldin Sc
 st.subheader("Dendrogram for Ward's Method")
 image_path = os.path.join(current_dir, "icon.png")
 st.image(image_path, caption="Cluster Analysis Icon", use_column_width=True)
-
-# Dendrogram oluşturma ve plotlama
-#fig, ax = plt.subplots(figsize=(10, 7))  
-#dendrogram_ward = sch.dendrogram(sch.linkage(x_h, method='ward'), truncate_mode='level', p=4, ax=ax)
-#st.pyplot(fig)
 
 # Explanation of the dendrogram
 st.markdown("""
