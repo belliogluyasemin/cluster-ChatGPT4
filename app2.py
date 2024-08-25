@@ -22,28 +22,22 @@ st.set_page_config(
 current_dir = os.getcwd()
 
 # Load Secret from GCP Secret Manager
-def get_secret(secret_name, project_id, version_id='1'):
-    client = secretmanager.SecretManagerServiceClient(credentials=credentials)
-    secret_path = f"projects/{project_id}/secrets/{secret_name}/versions/{version_id}"
-    response = client.access_secret_version(name=secret_path)
-    return response.payload.data.decode('UTF-8')
+##  Get Secret File From Secret Manager GCP
+def access_secret_version(project_id, secret_id, version_id="1"):
+    client = secretmanager.SecretManagerServiceClient()
+    name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
+    response = client.access_secret_version(name=name)
+    payload = response.payload.data.decode("UTF-8")
+    return payload
 
 # Set your GCP project ID
 project_id = "psychic-root-424207-s9"
-
-# Load service account info from environment variable
-service_account_info = json.loads(os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON'))
-
-# Authenticate using the service account info
-##credentials = service_account.Credentials.from_service_account_info(service_account_info)
-
-# Use the credentials to access GCP services
-client = secretmanager.SecretManagerServiceClient(credentials=credentials)
-
+secret_id = "myfirstproject02_secretman"  ##SecretID From GCP Secret Manager
 
 secret_payload = access_secret_version(project_id, secret_id)
 gcp_credentials = json.loads(secret_payload)
 
+# Authenticate using the service account info
 credentials = service_account.Credentials.from_service_account_info(gcp_credentials)
 
 
