@@ -23,8 +23,8 @@ current_dir = os.getcwd()
 
 # Load Secret from GCP Secret Manager
 ##  Get Secret File From Secret Manager GCP
-def access_secret_version(project_id, secret_id, version_id="1"):
-    client = secretmanager.SecretManagerServiceClient()
+def access_secret_version(project_id, secret_id, version_id="1", credentials=None):
+    client = secretmanager.SecretManagerServiceClient(credentials=credentials)
     name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
     response = client.access_secret_version(name=name)
     payload = response.payload.data.decode("UTF-8")
@@ -32,14 +32,18 @@ def access_secret_version(project_id, secret_id, version_id="1"):
 
 # Set your GCP project ID
 project_id = "psychic-root-424207-s9"
-secret_id = "myfirstproject02_secretman"  ##SecretID From GCP Secret Manager
-
-secret_payload = access_secret_version(project_id, secret_id)
-gcp_credentials = json.loads(secret_payload)
+secret_id = "myfirstproject02_secretman"  ## SecretID From GCP Secret Manager
 
 # Authenticate using the service account info
-credentials = service_account.Credentials.from_service_account_info(gcp_credentials)
+credentials = service_account.Credentials.from_service_account_info(json.loads(os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')))
 
+# Retrieve the secret payload
+secret_payload = access_secret_version(project_id, secret_id, credentials=credentials)
+gcp_credentials = json.loads(secret_payload)
+
+# Function to retrieve OpenAI API key
+def get_secret(secret_id, project_id):
+    return access_secret_version(project_id, secret_id, credentials)
 
 # Retrieve the OpenAI API key from Secret Manager
 openai_api_key = get_secret("openai-api-key", project_id)
