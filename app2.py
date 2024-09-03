@@ -26,7 +26,7 @@ def get_secret(secret_name, project_id, version_id='1'):
     response = client.access_secret_version(name=secret_path)
     return response.payload.data.decode('UTF-8')
 
-# Set your GCP project ID and get Service Account JSON from Secret Manager
+# Set  GCP project ID and get Service Account JSON from Secret Manager
 project_id = "psychic-root-424207-s9"
 service_account_json = get_secret("myfirstproject02_secretman", project_id)
 
