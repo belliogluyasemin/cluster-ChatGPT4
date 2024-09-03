@@ -4,14 +4,12 @@ import plotly.express as px
 import pickle
 import openai
 import os
-import json
 from google.cloud import secretmanager
 from langchain_openai import ChatOpenAI
 from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe_agent
 from langchain.agents.agent_types import AgentType
 import scipy.cluster.hierarchy as sch
 import matplotlib.pyplot as plt
-from google.oauth2 import service_account
 
 # Page Configuration
 st.set_page_config(
@@ -22,42 +20,47 @@ st.set_page_config(
 current_dir = os.getcwd()
 
 # Load Secret from GCP Secret Manager
-##  Get Secret File From Secret Manager GCP
-def access_secret_version(project_id, secret_id, version_id="1", credentials=None):
-    client = secretmanager.SecretManagerServiceClient(credentials=credentials)
-    name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
-    response = client.access_secret_version(name=name)
-    payload = response.payload.data.decode("UTF-8")
-    return payload
+def get_secret(secret_name, project_id, version_id='1'):
+    client = secretmanager.SecretManagerServiceClient()
+    secret_path = f"projects/{project_id}/secrets/{secret_name}/versions/{version_id}"
+    response = client.access_secret_version(name=secret_path)
+    return response.payload.data.decode('UTF-8')
 
-# Set your GCP project ID
+# Set your GCP project ID and get Service Account JSON from Secret Manager
 project_id = "psychic-root-424207-s9"
-secret_id = "myfirstproject02_secretman"  ## SecretID From GCP Secret Manager
+service_account_json = get_secret("myfirstproject02_secretman", project_id)
 
-# Authenticate using the service account info
-credentials = service_account.Credentials.from_service_account_info(json.loads(os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')))
+# Save the service account JSON to a temporary file
+service_account_path = os.path.join(current_dir, "service_account.json")
+with open(service_account_path, "w") as f:
+    f.write(service_account_json)
 
-# Retrieve the secret payload
-secret_payload = access_secret_version(project_id, secret_id, credentials=credentials)
-gcp_credentials = json.loads(secret_payload)
+# Authenticate using the service account
+from google.oauth2 import service_account
+credentials = service_account.Credentials.from_service_account_file(service_account_path)
 
-# Function to retrieve OpenAI API key
-def get_secret(secret_id, project_id):
-    return access_secret_version(project_id, secret_id, credentials)
+# Use the credentials to access GCP services
+client = secretmanager.SecretManagerServiceClient(credentials=credentials)
 
 # Retrieve the OpenAI API key from Secret Manager
 openai_api_key = get_secret("openai-api-key", project_id)
 
-# Continue with the rest of your Streamlit code
-pickle_path = os.path.join(current_dir, "country_filtered_cluster_ward")
-with open(pickle_path, 'rb') as file:
-    country_filtered = pickle.load(file)
-country_filtered.drop('cnt', axis=1, inplace=True)
+country_filtered = pd.read_parquet("country_filtered_cluster_ward.parquet")
 
-pickle_path1 = os.path.join(current_dir, "xh_cluster_ward2")
-with open(pickle_path1, 'rb') as file:
-    x_h = pickle.load(file)
-x_h.drop('cnt', axis=1, inplace=True)
+
+# Continue with the rest of your Streamlit code
+##pickle_path = os.path.join(current_dir, "country_filtered_cluster_ward")
+##with open(pickle_path, 'rb') as file:
+##   country_filtered = pickle.load(file, encoding='latin1')
+##country_filtered.drop('cnt', axis=1, inplace=True)
+
+x_h = pd.read_parquet("xh_cluster_ward2.parquet")
+
+
+##pickle_path1 = os.path.join(current_dir, "xh_cluster_ward2")
+##with open(pickle_path1, 'rb') as file:
+##    x_h = pickle.load(file)
+##x_h.drop('cnt', axis=1, inplace=True)
 
 # Streamlit page configuration
 st.title('Hierarchical Clustering and Visualization')
@@ -89,7 +92,7 @@ The vertical distance between the clusters indicates the dissimilarity between t
 """)
 
 # Sidebar for selecting column to visualize
-st.sidebar.title("Controls")
+st.sidebar.title("Choose the Visual Asset")
 numeric_cols = country_filtered.select_dtypes(include=['number']).columns
 col_options = [col for col in numeric_cols if col != 'clusters_ward']
 
@@ -125,7 +128,7 @@ st.subheader("Strategic Support - ChatGPT")
 
 # Create DataFrame Agent
 agent = create_pandas_dataframe_agent(
-    ChatOpenAI(temperature=0.7, model="gpt-4", openai_api_key=openai_api_key),
+    ChatOpenAI(temperature=0.9, model="gpt-4", openai_api_key=openai_api_key),
     country_filtered,
     verbose=True,
     agent_type=AgentType.OPENAI_FUNCTIONS,
@@ -139,3 +142,9 @@ user_question = st.text_input("Enter your question here:")
 if user_question:
     response = agent.run(user_question)
     st.write("Response:", response)
+
+
+
+## Write to Terminal
+##streamlit run app2.py
+##streamlit run app.py
