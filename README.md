@@ -1,5 +1,7 @@
 # User Clustering Project with ChatGPT Support
 
+![Workflow](clustersummary.drawio)
+
 ## Overview
 This project groups users into clusters using machine learning models such as KMeans, DBSCAN, and Hierarchical Clustering. The results are shown in a web application built with Streamlit. A ChatGPT chatbot is also included to answer user questions about the data and clustering results.
 
