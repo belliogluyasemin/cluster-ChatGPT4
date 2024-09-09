@@ -1,5 +1,3 @@
-# cluster-ChatGPT4
-
 # User Clustering Project with ChatGPT Support
 
 ## Overview
@@ -24,7 +22,7 @@ This project groups users into clusters using machine learning models such as KM
 ## Clustering Methods
 
 ### KMeans Clustering
-The KMeans algorithm was used to group users into clusters. The model’s performance was evaluated using inertia and silhouette scores. The chart below shows the average item revenue for each cluster, with Cluster 1 having the highest revenue.
+The KMeans algorithm was used to group users into clusters. The model’s performance was evaluated using inertia and silhouette scores.
 
 ### Hierarchical Clustering
 Hierarchical Clustering was used to build a hierarchy of user clusters. The dendrogram visualization helped identify the optimal number of clusters. Below is a Plotly chart showing how different features change based on the **Hierarchical Clustering** results.
