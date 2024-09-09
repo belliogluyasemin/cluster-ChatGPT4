@@ -49,5 +49,5 @@ Below is an example of interacting with the chatbot:
    ```bash
    git clone https://github.com/belliogluyasemin/cluster-ChatGPT4.git
    cd cluster-ChatGPT4
-   streamlit run app.py
+   streamlit run app2.py
 
