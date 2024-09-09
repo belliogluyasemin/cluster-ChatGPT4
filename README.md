@@ -25,7 +25,7 @@ This project groups users into clusters using machine learning models such as KM
 The KMeans algorithm was used to group users into clusters. The model’s performance was evaluated using inertia and silhouette scores.
 
 ### Hierarchical Clustering
-Hierarchical Clustering was used to build a hierarchy of user clusters. The dendrogram visualization helped identify the optimal number of clusters. Below is a Plotly chart showing how different features change based on the **Hierarchical Clustering** results.
+Hierarchical Clustering was used to build a hierarchy of user clusters. The dendrogram visualization helped identify the optimal number of clusters. Below is a Plotly chart showing how different features change based on the **Hierarchical Clustering** results, as you can streamlit app page
 
 ![Hierarchical Clustering - Feature Analysis](web_plotly.png)
 
